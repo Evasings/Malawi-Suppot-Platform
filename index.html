@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Malawi Support Platform — Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; max-width:900px;margin:24px auto;padding:12px;}
+    .card{border:1px solid #e5e7eb;padding:16px;border-radius:8px;margin-bottom:12px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.03)}
+    label{display:block;margin-top:8px;font-weight:600}
+    input, button, select{padding:8px;border:1px solid #d1d5db;border-radius:6px;width:100%;box-sizing:border-box;margin-top:6px}
+    button{background:#2563eb;color:white;border:none;cursor:pointer}
+    .small{font-size:13px;color:#6b7280}
+    .row{display:flex;gap:8px}
+    .row > *{flex:1}
+    .muted{color:#6b7280;font-size:13px}
+    .wallet{font-weight:700}
+  </style>
+</head>
+<body>
+  <h1>Malawi Support Platform — Demo</h1>
+  <p class="small">A local testbed for creators & teams. This demo uses a simulated Airtel integration.</p>
+
+  <div class="card">
+    <h3>Create user (creator or team)</h3>
+    <label>Name<input id="u-name" /></label>
+    <label>Type
+      <select id="u-type">
+        <option value="creator">Creator</option>
+        <option value="team">Team</option>
+      </select>
+    </label>
+    <button onclick="createUser()">Create user</button>
+    <p id="user-created" class="muted"></p>
+  </div>
+
+  <div class="card">
+    <h3>Create campaign</h3>
+    <label>Owner ID<input id="c-owner" /></label>
+    <label>Title<input id="c-title" /></label>
+    <label>Target Amount (MK)<input id="c-target" type="number" value="1000" /></label>
+    <label>Duration Days<input id="c-duration" type="number" value="30" /></label>
+    <button onclick="createCampaign()">Create campaign</button>
+    <p id="campaign-created" class="muted"></p>
+  </div>
+
+  <div class="card">
+    <h3>Donate (simulate fan)</h3>
+    <label>Campaign ID<input id="d-campaign" /></label>
+    <div class="row">
+      <div><label>Phone<input id="d-phone" /></label></div>
+      <div><label>Amount (MK)<input id="d-amount" type="number" value="100" /></label></div>
+    </div>
+    <button onclick="donate()">Donate</button>
+    <p id="donate-result" class="muted"></p>
+  </div>
+
+  <div class="card">
+    <h3>Resolve campaign (manual)</h3>
+    <label>Campaign ID<input id="r-campaign" /></label>
+    <button onclick="resolveCampaign()">Resolve</button>
+    <p id="resolve-result" class="muted"></p>
+  </div>
+
+  <div class="card">
+    <h3>Check wallet / campaign</h3>
+    <label>Wallet ID (eg: w-&lt;userId&gt; or platform-wallet)<input id="q-wallet" /></label>
+    <button onclick="queryWallet()">Get Wallet</button>
+    <pre id="wallet-res" class="muted"></pre>
+
+    <label>Campaign ID<input id="q-campaign" /></label>
+    <button onclick="queryCampaign()">Get Campaign</button>
+    <pre id="campaign-res" class="muted"></pre>
+  </div>
+
+  <script>
+    async function createUser(){
+      const name = document.getElementById('u-name').value;
+      const type = document.getElementById('u-type').value;
+      const res = await fetch('/api/users', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, type})});
+      const j = await res.json();
+      document.getElementById('user-created').innerText = JSON.stringify(j, null, 2);
+    }
+    async function createCampaign(){
+      const ownerId = document.getElementById('c-owner').value;
+      const title = document.getElementById('c-title').value;
+      const targetAmount = parseInt(document.getElementById('c-target').value || '0');
+      const durationDays = parseInt(document.getElementById('c-duration').value || '30');
+      const res = await fetch('/api/campaigns', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ownerId, title, targetAmount, durationDays})});
+      const j = await res.json();
+      document.getElementById('campaign-created').innerText = JSON.stringify(j, null, 2);
+    }
+    async function donate(){
+      const campaignId = document.getElementById('d-campaign').value;
+      const donorPhone = document.getElementById('d-phone').value;
+      const amount = parseInt(document.getElementById('d-amount').value || '0');
+      const res = await fetch('/api/donate', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({campaignId, donorPhone, amount})});
+      const j = await res.json();
+      document.getElementById('donate-result').innerText = JSON.stringify(j, null, 2);
+    }
+    async function resolveCampaign(){
+      const campaignId = document.getElementById('r-campaign').value;
+      const res = await fetch('/api/resolveCampaign', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({campaignId})});
+      const j = await res.json();
+      document.getElementById('resolve-result').innerText = JSON.stringify(j, null, 2);
+    }
+    async function queryWallet(){
+      const id = document.getElementById('q-wallet').value;
+      const res = await fetch('/api/wallets/' + encodeURIComponent(id));
+      const j = await res.json();
+      document.getElementById('wallet-res').innerText = JSON.stringify(j, null, 2);
+    }
+    async function queryCampaign(){
+      const id = document.getElementById('q-campaign').value;
+      const res = await fetch('/api/campaigns/' + encodeURIComponent(id));
+      const j = await res.json();
+      document.getElementById('campaign-res').innerText = JSON.stringify(j, null, 2);
+    }
+  </script>
+
+</body>
+</html>
